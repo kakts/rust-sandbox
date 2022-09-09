@@ -4,13 +4,6 @@ use num::Complex;
 fn main() {
     println!("Hello, world!");
 
-    // TODO
-    // match parse_pair("123,456", ',') {
-    //     Some(l, r) => println!("parse pair result is {:?}, {:?}", l, r),
-    //     None => println("parse pair result is None")
-    // }
-    // println!("parsed pair result is {:b}", parsed_pair)
-
     let parsed_complex = parse_complex("1.25,-0.0625");
     println!("parsed complex result is {:?}", parsed_complex);
 }
@@ -68,6 +61,22 @@ fn escape_time(c: Complex<f64>, limit: usize) -> Option<usize> {
     None
 }
 
+/// 出力される画像のピクセルの位置をとり、対応する複素平面上の点を返す
+/// pixelは画像上の特定のピクセルを（行,列)ペアの形で指定する
+/// 仮引数upper_left lower_rightは出力画像に描画する複素平面を左上と右下で指定する
+fn pixel_to_point(bounds: (usize, usize),
+                    pixel: (usize, usize),
+                    upper_left: Complex<f64>,
+                    lower_right: Complex<f64>) -> Complex<f64> {
+    let (width, height) = (lower_right.re - upper_left.re, upper_left.im - lower_right.im);
+
+    // imが引き算となっている理由。 上に動くとpixel.1は増えるが、虚部は小さくなるため
+    // pixel.0 pixel.1はタプルの要素を参照
+    Complex {
+        re: upper_left.re + pixel.0 as f64 * width / bounds.0 as f64,
+        im: upper_left.im - pixel.1 as f64 * height / bounds.1 as f64
+    }
+}
 
 /**
  * xの値に応じて、xは0に近づくか、1のままか、無限大に近づくかのいずれか
@@ -103,12 +112,20 @@ fn test_parse_pair() {
     assert_eq!(parse_pair::<i32>(",10", ','), None);
     assert_eq!(parse_pair::<i32>("10,20", ','), Some((10, 20)));
     assert_eq!(parse_pair::<i32>("10,20xy", ','), None);
-    assert_eq!(parse_pair::<i32>("0.5x", 'x'), None);
-    assert_eq!(parse_pair::<i32>("0.5x1.5", 'x'), Some((0.5, 1.5)));
+    assert_eq!(parse_pair::<f64>("0.5x", 'x'), None);
+    assert_eq!(parse_pair::<f64>("0.5x1.5", 'x'), Some((0.5, 1.5)));
 }
 
 #[test]
 fn test_parse_complex() {
     assert_eq!(parse_complex("1.25,-0.0625"), Some(Complex {re: 1.25, im: -0.0625}));
     assert_eq!(parse_complex(", -0.0625"), None);
+}
+
+#[test]
+fn test_pixel_to_point() {
+    assert_eq!(pixel_to_point((100, 200), (25, 175),
+                                Complex {re: -1.0, im: 1.0},
+                                Complex {re: 1.0, im: -1.0}),
+                                Complex {re: -0.5, im: -0.75});
 }
