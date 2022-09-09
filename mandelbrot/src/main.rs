@@ -1,5 +1,8 @@
 use std::str::FromStr;
 use num::Complex;
+use image::ColorType;
+use image::png::PNGEncoder;
+use std::fs::File;
 
 fn main() {
     println!("Hello, world!");
@@ -7,6 +10,23 @@ fn main() {
     let parsed_complex = parse_complex("1.25,-0.0625");
     println!("parsed complex result is {:?}", parsed_complex);
 }
+
+/// 大きさがbounds で指定されたバッファpixelsをfilenameで指定されたファイルに書き出す
+fn write_image(filename: &str, pixels: &[u8], bounds: (usize, usize)) -> Result<(), std::io::Error> {
+    // ファイルオープンし、画像をそのファイルに書き出す
+    let output = match File::create(filename) {
+        Ok(f) => f,
+        Err(e) => {
+            return Err(e);
+        }
+    };
+    let encoder = PNGEncoder::new(output);
+
+    encoder.encode(pixels, bounds.0 as u32, bounds.1 as u32, ColorType::Gray(8))
+
+    Ok(())
+}
+
 
 /// sが適切な形であればSome<(x,y)>を返す　そうでなければNone
 /// <T: FromStr> は FromStrトレイトを実装する任意の型Tに対して　と読む
@@ -75,6 +95,26 @@ fn pixel_to_point(bounds: (usize, usize),
     Complex {
         re: upper_left.re + pixel.0 as f64 * width / bounds.0 as f64,
         im: upper_left.im - pixel.1 as f64 * height / bounds.1 as f64
+    }
+}
+
+fn render(pixels: &mut [u8],
+            bounds: (usize, usize),
+            upper_left: Complex<f64>
+            lower_right: Complex<f64
+) {
+    assert!(pixels.len() == bounds.0 * bounds.1);
+
+    for now in 0..bounds.1 {
+        for column in 0..bounds.0 {
+            let point = pixel_to_point(bounds, (column, row),
+                upper_left, lower_right);
+            pixels[row * bounds.0 + column] = 
+                match escape_time(point, 255) {
+                    None => 0,
+                    Some(count) => 255 - count as u8
+                };
+        }
     }
 }
 
