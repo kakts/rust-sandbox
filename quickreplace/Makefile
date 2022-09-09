@@ -1,3 +1,3 @@
 .PHONY: run
 run:
-	cargo run "find" "replace" Cargo.toml Copy.toml
+	cargo run "world" "Rust" src/test.txt test-modified.txt

@@ -1,6 +1,7 @@
 use text_colorizer::*;
 use std::env;
 use std::fs;
+use regex::Regex;
 
 // コマンドラインインタフェース
 // #[derive..] で
@@ -40,6 +41,15 @@ fn parse_args() -> Arguments {
     }
 }
 
+/// 文字列から正規表現にマッチする部分を全て探し出し、それらを指定した文字に置き換える
+fn replace(target: &str, replacement: &str, text: &str) -> Result<String, regex::Error> {
+    // 最後に?を用いて、Regex::newが失敗した場合の処理を省略する
+    let regex = Regex::new(target)?;
+    // replace_allは元のテキストを指すポインタを返す。この場合は常に新しいコピーが必要なため、to_stringを作り
+    // それをResult::Okでラップして返す
+    Ok(regex.replace_all(text, replacement).to_string())
+}
+
 fn main() {
     let args = parse_args();
 
@@ -52,8 +62,17 @@ fn main() {
         }
     };
 
-    
-    match fs::write(&args.output, &data) {
+    // 読み込んだデータを元に、指定したターゲット文字列を置換した文字列を取得
+    let replaced_data = match replace(&args.target, &args.replacement, &data) {
+        Ok(v) => v,
+        Err(e) => {
+            eprintln!("{} failed to replace text: {:?}", "Error:".red().bold(), e);
+            std::process::exit(1);
+        }
+    };
+
+    // 置換後のデータをファイルに書き出す
+    match fs::write(&args.output, &replaced_data) {
         Ok(_) => {},
         Err(e) => {
             eprintln!("{} failed to write to file '{}': {:?}", "Error:".red().bold(), args.filename, e);
