@@ -29,7 +29,10 @@ fn main() {
         match guess_num.cmp(&rand_num) {
             Ordering::Less => println!("Too small!"),
             Ordering::Greater => println!("Too big!"),
-            Ordering::Equal => println!("You win! challenge count is : {}", &count),            
+            Ordering::Equal => {
+                println!("You win! challenge count is : {}", &count),            
+                break;
+            }
         }
         guess.clear();
         count += 1;
