@@ -1,5 +1,6 @@
 use std::io;
 use rand::Rng;
+use std::cmp::Ordering;
 
 fn main() {
     println!("Hello, world!");
@@ -25,13 +26,10 @@ fn main() {
             }
         };
 
-        if guess_num == rand_num {
-            println!("You win! challenge count is : {}", &count);
-            break;
-        } else if guess_num > rand_num{
-            println!("{} is too big!", &guess_num);
-        } else {
-            println!("{} is too small!",&guess_num);
+        match guess_num.cmp(&rand_num) {
+            Ordering::Less => println!("Too small!"),
+            Ordering::Greater => println!("Too big!"),
+            Ordering::Equal => println!("You win! challenge count is : {}", &count),            
         }
         guess.clear();
         count += 1;
